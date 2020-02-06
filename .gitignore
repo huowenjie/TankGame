@@ -1,0 +1,16 @@
+*x64
+.vs
+*.scc
+*.rc
+*.vcproj*
+*.vcxproj*
+*.vspscc
+*.user
+*.scc
+*.suo
+*.ncb
+*.sln
+*.def
+*.vssscc
+*.db
+*.opendb
