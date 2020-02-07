@@ -10,7 +10,11 @@
 
 namespace hwj 
 {
-	Application::Application() : winWidth(800), winHeight(600)
+	Application::Application() : 
+		winWidth(800), 
+		winHeight(600),
+		defRenderFps(30.0f),
+		defLogicFps(30.0f)
 	{
 	}
 	
@@ -75,18 +79,64 @@ namespace hwj
 		tank.Initialize();
 
 		// 主循环
+		float logicDelt = 1.0f / defLogicFps;
+		float rendDelt = 1.0f / defRenderFps;
+
+		float logicCount = 0.0f;				// 逻辑贞计时器
+		float curTime = (float)glfwGetTime();
+		float newTime = 0.0f;					// 每帧开启时的时间
+		float frameTime = 0.0f;					// 每个渲染帧所用的时间
+		float frameLose = 0.25f;				// 最大掉帧时间
+		float interpAlpha = 0.0f;				// 当前帧的插值比率
+
+		TIMER tm = NULL;
+
+		if (!CreateTimer(tm) || !tm) {
+			LOG_INTO("CreateTimer error!\n");
+			return;
+		}
+
 		while (!glfwWindowShouldClose(win)) {
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			// 游戏控制逻辑，比如操作对象移动
-			tank.Update(mainWindow);
+			newTime = (float)glfwGetTime();
+			frameTime = newTime - curTime;
+
+			curTime = newTime;
+
+			// 检查掉帧
+			if (frameTime >= frameLose) {
+				frameTime = frameLose;
+			}
+
+			// 逻辑帧计数
+			logicCount += frameTime;
+
+			// 逻辑帧控制在 30 帧
+			while (logicCount >= logicDelt) {
+
+				// 游戏控制逻辑，比如操作对象移动
+				tank.Update(mainWindow);
+				logicCount -= logicDelt;
+			}
+
+			// 计算插值比率
+			interpAlpha = logicCount / logicDelt;
 
 			// 游戏对象渲染
-			tank.Draw(shader);
+			tank.Draw(shader, interpAlpha);
 
+			// 双缓冲绘制
 			glfwSwapBuffers(win);
 			glfwPollEvents();
+
+			// 当前帧时间限制
+			if (frameTime < rendDelt) {
+				WaitTimer(tm, (int)((rendDelt - frameTime) * 1000));
+			}
 		}
+
+		DestroyTimer(tm);
 
 		tank.Terminate();
 		shader.DeleteShader();

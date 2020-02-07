@@ -26,7 +26,7 @@ namespace hwj
 
 	public:
 		// 绘制对象
-		void Draw(ShaderProgram &shader);
+		void Draw(ShaderProgram &shader, float interpAlga = 1.0f);
 
 		// 更新当前位置
 		void Update(WINDOWHANDLE handle);

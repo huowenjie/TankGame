@@ -5,7 +5,7 @@
 namespace hwj 
 {
 	Tank::Tank() : x(400.0f), y(300.0f), width(60.0f), height(60.0f),
-		speed(2.0f), direct(0.0f)
+		speed(10.0f), direct(0.0f)
 	{
 		model = glm::mat4(1.0f);
 	}
@@ -14,7 +14,7 @@ namespace hwj
 	{
 	}
 
-	void Tank::Draw(ShaderProgram &shader)
+	void Tank::Draw(ShaderProgram &shader, float interpAlga)
 	{
 		shader.SetMat4f("model", &model[0][0]);
 
