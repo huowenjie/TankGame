@@ -13,7 +13,7 @@ namespace hwj
 	Application::Application() : 
 		winWidth(800), 
 		winHeight(600),
-		defRenderFps(30.0f),
+		defRenderFps(60.0f),
 		defLogicFps(30.0f)
 	{
 	}
@@ -101,13 +101,13 @@ namespace hwj
 
 			newTime = (float)glfwGetTime();
 			frameTime = newTime - curTime;
-
-			curTime = newTime;
-
-			// 检查掉帧
+			
+			// 如果因为暂停或者某一帧渲染时间过长导致
+			// 真实事件边长，强行矫正
 			if (frameTime >= frameLose) {
 				frameTime = frameLose;
 			}
+			curTime = newTime;
 
 			// 逻辑帧计数
 			logicCount += frameTime;
@@ -130,9 +130,9 @@ namespace hwj
 			glfwSwapBuffers(win);
 			glfwPollEvents();
 
-			// 当前帧时间限制
+			// 当前帧时间限制,w稳定帧率
 			if (frameTime < rendDelt) {
-				WaitTimer(tm, (int)((rendDelt - frameTime) * 1000));
+				WaitTimer(tm, (int)(1000 * (rendDelt - frameTime)));
 			}
 		}
 

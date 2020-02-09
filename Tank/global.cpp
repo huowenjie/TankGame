@@ -1,5 +1,6 @@
 #include "global.h"
 #include <Windows.h>
+#include <time.h>
 
 namespace hwj
 {

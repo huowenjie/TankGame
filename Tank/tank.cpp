@@ -1,5 +1,6 @@
 #include "tank.h"
-#include <glad\glad.h>
+#include "app-debug.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 namespace hwj 
@@ -8,14 +9,17 @@ namespace hwj
 		speed(10.0f), direct(0.0f)
 	{
 		model = glm::mat4(1.0f);
+		prevModel = glm::mat4(1.0f);
 	}
 
 	Tank::~Tank() 
 	{
 	}
 
-	void Tank::Draw(ShaderProgram &shader, float interpAlga)
+	void Tank::Draw(ShaderProgram &shader, float interpAlgha)
 	{
+		shader.SetFloat("interpAlpha", interpAlgha);
+		shader.SetMat4f("prevModel", &prevModel[0][0]);
 		shader.SetMat4f("model", &model[0][0]);
 
 		glBindVertexArray(vao);
@@ -28,41 +32,34 @@ namespace hwj
 		if (!handle) {
 			return;
 		}
-
 		GLFWwindow *win = (GLFWwindow *)handle;
 
-		if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
-			Move(Tank::UP);
-		}
+		// 缓存上一帧的模型矩阵
+		prevModel = model;
 
-		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
-			Move(Tank::DOWN);
-		}
+		// ------------- 基本操作逻辑 ---------------
 
-		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
-			Move(Tank::LEFT);
-		}
-
-		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
-			Move(Tank::RIGHT);
-		}
+		if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) { Move(Tank::UP);   }
+		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) { Move(Tank::DOWN); }
+		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) { Move(Tank::LEFT); }
+		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) { Move(Tank::RIGHT);}
 	}
 
 	void Tank::Move(MoveDirect md)
 	{
-		static glm::vec3 up    = glm::vec3(0.0f,   speed, 0.0f);
-		static glm::vec3 down  = glm::vec3(0.0f,  -speed, 0.0f);
-		static glm::vec3 left  = glm::vec3(-speed, 0.0f,  0.0f);
-		static glm::vec3 right = glm::vec3(speed,  0.0f,  0.0f);
+		static glm::mat4 forward =
+			glm::translate(model, glm::vec3(0.0f, speed, 0.0f));
 
 		switch (md) {
-		case UP:	model = glm::translate(model, up); break;
-		case DOWN:	model = glm::translate(model, down); break;
-		case LEFT:	model = glm::translate(model, left); break;
-		case RIGHT: model = glm::translate(model, right); break;
-		default:	model = glm::mat4(1.0f);
+		case UP:	model *= forward; break;
+		case DOWN:	;  break;
+		case LEFT:  ;  break;
+		case RIGHT: ;  break;
+		default:
 			break;
 		}
+
+
 	}
 
 	void Tank::Initialize()

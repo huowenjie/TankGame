@@ -26,7 +26,7 @@ namespace hwj
 
 	public:
 		// 绘制对象
-		void Draw(ShaderProgram &shader, float interpAlga = 1.0f);
+		void Draw(ShaderProgram &shader, float interpAlgha = 1.0f);
 
 		// 更新当前位置
 		void Update(WINDOWHANDLE handle);
@@ -40,18 +40,19 @@ namespace hwj
 		void Terminate();
 
 	protected:
-		float x;			// 当前物体中心坐标位置
+		float x;				// 当前物体中心坐标位置
 		float y;
-		float width;		// 宽
-		float height;		// 高
+		float width;			// 宽
+		float height;			// 高
 
-		float speed;		// 当前移动速度
-		float direct;		// 对象方向角	
+		float speed;			// 当前移动速度
+		float direct;			// 对象方向角	
 
 		unsigned int vao;
 		unsigned int vbo;
 
-		glm::mat4 model;	// 平移矩阵
+		glm::mat4 model;		// 模型矩阵
+		glm::mat4 prevModel;	// 上一帧矩阵数据
 	};
 }
 
