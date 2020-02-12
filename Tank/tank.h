@@ -53,6 +53,8 @@ namespace hwj
 
 		glm::mat4 model;		// 模型矩阵
 		glm::mat4 prevModel;	// 上一帧矩阵数据
+		glm::vec4 position;		// 位置
+		glm::vec4 startPos;		// 初始位置
 	};
 }
 

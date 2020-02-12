@@ -40,7 +40,7 @@ namespace hwj
 		GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, title, NULL, NULL);
 		
 		if (!window) {
-			LOG_INTO("Failed to create GLFW window\n");
+			LOG_INFO("Failed to create GLFW window\n");
 			glfwTerminate();
 			return;
 		}
@@ -52,7 +52,7 @@ namespace hwj
 	void Application::LoadGraphicApi() 
 	{
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-			LOG_INTO("Failed to initialize GLAD\n");
+			LOG_INFO("Failed to initialize GLAD\n");
 		}
 	}
 
@@ -92,7 +92,7 @@ namespace hwj
 		TIMER tm = NULL;
 
 		if (!CreateTimer(tm) || !tm) {
-			LOG_INTO("CreateTimer error!\n");
+			LOG_INFO("CreateTimer error!\n");
 			return;
 		}
 

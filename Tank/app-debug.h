@@ -4,7 +4,7 @@
 #include <cstdio>
 
 #ifdef APP_DEBUG
-#define LOG_INTO(format, ...) std::printf((format), ##__VA_ARGS__)
+#define LOG_INFO(format, ...) std::printf((format), ##__VA_ARGS__)
 #else
 #define LOG_INFO(format, ...)
 #endif // APP_DEBUG

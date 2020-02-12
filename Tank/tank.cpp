@@ -6,10 +6,16 @@
 namespace hwj 
 {
 	Tank::Tank() : x(400.0f), y(300.0f), width(60.0f), height(60.0f),
-		speed(10.0f), direct(0.0f)
+		speed(2.0f), direct(0.0f)
 	{
 		model = glm::mat4(1.0f);
 		prevModel = glm::mat4(1.0f);
+
+		startPos.x = x;
+		startPos.y = y;
+		startPos.z = 0.0f;
+		startPos.w = 1.0f;
+		position = startPos;
 	}
 
 	Tank::~Tank() 
@@ -43,34 +49,46 @@ namespace hwj
 		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) { Move(Tank::DOWN); }
 		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) { Move(Tank::LEFT); }
 		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) { Move(Tank::RIGHT);}
+
+		position = model * startPos;
 	}
 
 	void Tank::Move(MoveDirect md)
 	{
-		static glm::mat4 forward =
-			glm::translate(model, glm::vec3(0.0f, speed, 0.0f));
-
 		switch (md) {
-		case UP:	model *= forward; break;
-		case DOWN:	;  break;
-		case LEFT:  ;  break;
-		case RIGHT: ;  break;
+		case UP:
+			model = glm::translate(model, glm::vec3(0, speed, 0.0f));
+			break;
+		case DOWN:
+			model = glm::translate(model, glm::vec3(0, -speed, 0.0f));
+			break;
+		case LEFT:
+			model = glm::translate(model, glm::vec3(startPos.x, startPos.y, 0.0f));
+			model = glm::rotate(model, glm::radians(1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::translate(model, glm::vec3(-startPos.x, -startPos.y, 0.0f));
+			break;
+		case RIGHT:
+			model = glm::translate(model, glm::vec3(startPos.x, startPos.y, 0.0f));
+			model = glm::rotate(model, glm::radians(-1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = glm::translate(model, glm::vec3(-startPos.x, -startPos.y, 0.0f));
+			break;
 		default:
 			break;
 		}
 
-
+		LOG_INFO("x = %f, y = %f\n", position.x, position.y);
 	}
 
 	void Tank::Initialize()
 	{
 		float vertex[24] = {
-			x - width / 2, y + height / 2, 0.0f, 0.0f,
-			x + width / 2, y + height / 2, 0.0f, 0.0f,
-			x + width / 2, y - height / 2, 0.0f, 0.0f,
-			x + width / 2, y - height / 2, 0.0f, 0.0f,
-			x - width / 2, y - height / 2, 0.0f, 0.0f,
-			x - width / 2, y + height / 2, 0.0f, 0.0f,
+			startPos.x - width / 2, startPos.y + height / 2, 0.0f, 0.0f,
+			startPos.x + width / 2, startPos.y + height / 2, 0.0f, 0.0f,
+			startPos.x + width / 2, startPos.y - height / 2, 0.0f, 0.0f,
+
+			startPos.x + width / 2, startPos.y - height / 2, 0.0f, 0.0f,
+			startPos.x - width / 2, startPos.y - height / 2, 0.0f, 0.0f,
+			startPos.x - width / 2, startPos.y + height / 2, 0.0f, 0.0f
 		};
 
 		// 创建顶点缓冲对象
