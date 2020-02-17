@@ -103,7 +103,7 @@ namespace hwj
 			frameTime = newTime - curTime;
 			
 			// 如果因为暂停或者某一帧渲染时间过长导致
-			// 真实事件边长，强行矫正
+			// 真实时间间隔变长，重新设定帧时间
 			if (frameTime >= frameLose) {
 				frameTime = frameLose;
 			}
@@ -130,7 +130,7 @@ namespace hwj
 			glfwSwapBuffers(win);
 			glfwPollEvents();
 
-			// 当前帧时间限制,w稳定帧率
+			// 当前帧时间限制, w 稳定帧率
 			if (frameTime < rendDelt) {
 				WaitTimer(tm, (int)(1000 * (rendDelt - frameTime)));
 			}

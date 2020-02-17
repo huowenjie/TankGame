@@ -13,10 +13,10 @@ namespace hwj
 	class Tank 
 	{
 	public:
-		Tank();
+		Tank(float x = 400.0f, float y = 300.0f);
 		~Tank();
 
-		enum MoveDirect {
+		enum Action {
 			UP,
 			DOWN,
 			LEFT,
@@ -32,7 +32,10 @@ namespace hwj
 		void Update(WINDOWHANDLE handle);
 
 		// 移动
-		void Move(MoveDirect md);
+		void Move(Action action);
+
+		// 设置移速
+		void SetSpeed(int speed);
 
 	public:
 		// 初始化
@@ -40,21 +43,18 @@ namespace hwj
 		void Terminate();
 
 	protected:
-		float x;				// 当前物体中心坐标位置
-		float y;
-		float width;			// 宽
-		float height;			// 高
+		float mWidth;			// 宽
+		float mHeight;			// 高
 
-		float speed;			// 当前移动速度
-		float direct;			// 对象方向角	
+		float mSpeed;			// 当前移动速度
 
-		unsigned int vao;
-		unsigned int vbo;
+		unsigned int mVao;
+		unsigned int mVbo;
 
-		glm::mat4 model;		// 模型矩阵
-		glm::mat4 prevModel;	// 上一帧矩阵数据
-		glm::vec4 position;		// 位置
-		glm::vec4 startPos;		// 初始位置
+		glm::mat4 mModel;		// 模型矩阵
+		glm::mat4 mPrevModel;	// 上一帧矩阵数据
+		glm::vec4 mPosition;	// 位置
+		glm::vec4 mStartPos;	// 初始位置
 	};
 }
 
