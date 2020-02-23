@@ -13,6 +13,7 @@ namespace hwj
 	public:
 		// 生成默认纹理
 		static int GenDefTextures(const char *path);
+		static void DelTextures(unsigned int textures);
 	};
 }
 

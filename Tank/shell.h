@@ -1,40 +1,34 @@
-#ifndef __TANK_H__
-#define __TANK_H__
+#ifndef __SHELL_H__
+#define __SHELL_H__
 
 #include "turret.h"
 
 namespace hwj 
 {
-	class Tank 
+	// 炮弹
+	class Shell
 	{
 	public:
-		Tank(float x = 400.0f, float y = 300.0f);
-		~Tank();
+		Shell();
+		~Shell();
 
-		enum Action {
-			UP,
-			DOWN,
-			LEFT,
-			RIGHT,
-			STOP
+		enum Status {
+			AWAIT,		// 待命
+			FLYING,		// 射击飞行过程
+			EXPLODE,	// 爆炸
+			STRIKE,		// 撞击
+			DESTROY		// 被系统回收
 		};
 
 	public:
-
 		// 绘制对象
 		void Draw(ShaderProgram &shader, float interpAlgha = 1.0f);
 
 		// 更新当前位置
 		void Update(WINDOWHANDLE handle);
 
-		// 移动
-		void Run(Action action);
-
 		// 设置移速
-		void SetSpeed(float speed);
-
-		// 设置转速
-		void SetRotateSpeed(float rSpeed);
+		void SetSpeed(int speed);
 
 	public:
 		// 初始化
@@ -45,20 +39,17 @@ namespace hwj
 		float mWidth;			// 宽
 		float mHeight;			// 高
 
-		float mSpeed;			// 当前移动速度
-		float mRSpeed;			// 底盘旋转速度
-
 		unsigned int mVao;
 		unsigned int mVbo;
 		unsigned int mTex;
+
+		float mSpeed;			// 当前移动速度
 
 		glm::mat4 mModel;		// 模型矩阵
 		glm::mat4 mPrevModel;	// 上一帧矩阵数据
 		glm::vec4 mPosition;	// 位置
 		glm::vec4 mStartPos;	// 初始位置
-
-		Turret mTurret;			// 所属炮塔
 	};
 }
 
-#endif // __TANK_H__
+#endif // __SHELL_H__

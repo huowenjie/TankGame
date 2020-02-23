@@ -1,14 +1,20 @@
-#include "tank.h"
-#include "app-debug.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-namespace hwj 
+#include "tank.h"
+#include "app-debug.h"
+#include "texture.h"
+
+namespace hwj
 {
 	Tank::Tank(float x, float y) : 
 		mWidth(60.0f), 
 		mHeight(60.0f),
-		mSpeed(2.0f)
+		mSpeed(2.0f),
+		mRSpeed(1.0f),
+		mVao(0),
+		mVbo(0),
+		mTex(0)
 	{
 		mModel = glm::mat4(1.0f);
 		mPrevModel = glm::mat4(1.0f);
@@ -26,13 +32,18 @@ namespace hwj
 
 	void Tank::Draw(ShaderProgram &shader, float interpAlgha)
 	{
+		shader.SetInt("turret", 0);
 		shader.SetFloat("interpAlpha", interpAlgha);
 		shader.SetMat4f("prevModel", &mPrevModel[0][0]);
 		shader.SetMat4f("model", &mModel[0][0]);
 
 		glBindVertexArray(mVao);
+		glBindTexture(GL_TEXTURE_2D, mTex);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
+
+		// 设置矩阵
+		mTurret.Draw(shader, interpAlgha);
 	}
 
 	void Tank::Update(WINDOWHANDLE handle)
@@ -44,18 +55,24 @@ namespace hwj
 
 		// 缓存上一帧的模型矩阵
 		mPrevModel = mModel;
+		mTurret.mPrevModel = mPrevModel;
 
 		// ------------- 基本操作逻辑 ---------------
 
-		if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) { Move(Tank::UP);   }
-		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) { Move(Tank::DOWN); }
-		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) { Move(Tank::LEFT); }
-		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) { Move(Tank::RIGHT);}
+		if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) { Run(Tank::UP);   }
+		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) { Run(Tank::DOWN); }
+		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) { Run(Tank::LEFT); }
+		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) { Run(Tank::RIGHT);}
 
+		// 计算坦克当前位置
 		mPosition = mModel * mStartPos;
+
+		// 设置炮塔的模型矩阵
+		mTurret.Update(handle);
+		mTurret.mModel = mModel;
 	}
 
-	void Tank::Move(Action action)
+	void Tank::Run(Action action)
 	{
 		switch (action) {
 		case UP:
@@ -74,26 +91,33 @@ namespace hwj
 			mModel = glm::rotate(mModel, glm::radians(-1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 			mModel = glm::translate(mModel, glm::vec3(-mStartPos.x, -mStartPos.y, 0.0f));
 			break;
+		case STOP:
 		default:
 			break;
 		}
 	}
 
-	void Tank::SetSpeed(int speed)
+	void Tank::SetSpeed(float speed)
 	{
-		mSpeed = (float)speed;
+		mSpeed = speed;
+	}
+
+	// 设置转速
+	void Tank::SetRotateSpeed(float rSpeed)
+	{
+		mRSpeed = rSpeed;
 	}
 
 	void Tank::Initialize()
 	{
 		float vertex[24] = {
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 0.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 0.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 0.0f, 0.0f,
+			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 1.0f,
+			mStartPos.x + mWidth / 2, mStartPos.y + mHeight / 2, 1.0f, 1.0f,
+			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 1.0f, 0.0f,
 
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 0.0f, 0.0f,
+			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 1.0f, 0.0f,
 			mStartPos.x - mWidth / 2, mStartPos.y - mHeight / 2, 0.0f, 0.0f,
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 0.0f
+			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 1.0f
 		};
 
 		// 创建顶点缓冲对象
@@ -106,13 +130,26 @@ namespace hwj
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)0);
 		
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)(2 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		// 加载纹理文件
+		mTex = TexLoader::GenDefTextures("res/chassis.png");
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+
+		// 初始化炮塔
+		mTurret.mStartPos = mPosition;
+		mTurret.Initialize();
 	}
 
 	void Tank::Terminate()
 	{
+		mTurret.Terminate();
+		TexLoader::DelTextures(mTex);
+
 		glDeleteBuffers(1, &mVbo);
-		glDeleteVertexArrays(1, &mVao);
+		glDeleteVertexArrays(1, &mVao);		
 	}
 }
