@@ -1,5 +1,5 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <sdl2/SDL.h>
 
 #include "tank.h"
 #include "app-debug.h"
@@ -46,23 +46,26 @@ namespace hwj
 		mTurret.Draw(shader, interpAlgha);
 	}
 
-	void Tank::Update(WINDOWHANDLE handle)
+	void Tank::Update(GAMEEVNET handle)
 	{
+		SDL_Event *gameEvent = reinterpret_cast<SDL_Event *>(handle);
+
 		if (!handle) {
 			return;
 		}
-		GLFWwindow *win = (GLFWwindow *)handle;
 
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
+		
 		// 缓存上一帧的模型矩阵
 		mPrevModel = mModel;
 		mTurret.mPrevModel = mPrevModel;
 
 		// ------------- 基本操作逻辑 ---------------
 
-		if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) { Run(Tank::UP);   }
-		if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) { Run(Tank::DOWN); }
-		if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) { Run(Tank::LEFT); }
-		if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) { Run(Tank::RIGHT);}
+		if (state[SDL_SCANCODE_W]) { Run(Tank::UP);		}
+		if (state[SDL_SCANCODE_S]) { Run(Tank::DOWN);	}
+		if (state[SDL_SCANCODE_A]) { Run(Tank::LEFT);	}
+		if (state[SDL_SCANCODE_D]) { Run(Tank::RIGHT);	}
 
 		// 计算坦克当前位置
 		mPosition = mModel * mStartPos;
@@ -70,6 +73,8 @@ namespace hwj
 		// 设置炮塔的模型矩阵
 		mTurret.Update(handle);
 		mTurret.mModel = mModel;
+
+		// -------------- 碰撞逻辑 ----------------
 	}
 
 	void Tank::Run(Action action)
@@ -83,12 +88,12 @@ namespace hwj
 			break;
 		case LEFT:
 			mModel = glm::translate(mModel, glm::vec3(mStartPos.x, mStartPos.y, 0.0f));
-			mModel = glm::rotate(mModel, glm::radians(1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			mModel = glm::rotate(mModel, glm::radians(mRSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
 			mModel = glm::translate(mModel, glm::vec3(-mStartPos.x, -mStartPos.y, 0.0f));
 			break;
 		case RIGHT:
 			mModel = glm::translate(mModel, glm::vec3(mStartPos.x, mStartPos.y, 0.0f));
-			mModel = glm::rotate(mModel, glm::radians(-1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			mModel = glm::rotate(mModel, glm::radians(-mRSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
 			mModel = glm::translate(mModel, glm::vec3(-mStartPos.x, -mStartPos.y, 0.0f));
 			break;
 		case STOP:

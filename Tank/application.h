@@ -30,13 +30,16 @@ namespace hwj
 		// 主窗口句柄
 		WINDOWHANDLE mainWindow;
 
+		// 主窗口上下文
+		OPENGLCONTEXT mainContext;
+
 		// 窗口的尺寸
 		int winWidth;
 		int winHeight;
 
 		// 逻辑帧和渲染帧的值
-		float defRenderFps;
-		float defLogicFps;
+		int defRenderFps;
+		int defLogicFps;
 	};
 }
 

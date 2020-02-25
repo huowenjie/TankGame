@@ -6,6 +6,12 @@ namespace hwj
 	// 窗口句柄
 	typedef void * WINDOWHANDLE;
 
+	// Opengl 上下文
+	typedef void * OPENGLCONTEXT;
+
+	// 事件句柄
+	typedef void * GAMEEVNET;
+
 	// 定时器
 	typedef void * TIMER;
 

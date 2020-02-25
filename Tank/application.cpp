@@ -1,4 +1,5 @@
-#include <glfw/glfw3.h>
+#include <cstdlib>
+#include <sdl2/SDL.h>
 
 #undef __gl_h_
 #include <glad/glad.h>
@@ -11,10 +12,12 @@
 namespace hwj 
 {
 	Application::Application() : 
+		mainWindow(nullptr),
+		mainContext(nullptr),
 		winWidth(800), 
 		winHeight(600),
-		defRenderFps(60.0f),
-		defLogicFps(30.0f)
+		defRenderFps(60),
+		defLogicFps(30)
 	{
 	}
 	
@@ -25,34 +28,58 @@ namespace hwj
 
 	Application::~Application() 
 	{
-		if (mainWindow != NULL) {
-			glfwTerminate();
+		if (mainContext != nullptr) {
+			SDL_GL_DeleteContext(mainContext);
 		}
+
+		if (mainWindow != NULL) {
+			SDL_DestroyWindow((SDL_Window *)mainWindow);
+			mainWindow = NULL;
+		}
+
+		SDL_Quit();
 	}
 
 	void Application::CreateWindow(const char *title)
 	{
-		glfwInit();
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-		GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, title, NULL, NULL);
-		
-		if (!window) {
-			LOG_INFO("Failed to create GLFW window\n");
-			glfwTerminate();
-			return;
+		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		{
+			LOG_INFO("Init Failed!\n");
+			std::abort();
 		}
 
-		glfwMakeContextCurrent(window);
+		// 使用 opengl 4.5
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+		SDL_Window *window = SDL_CreateWindow(
+			title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			winWidth, winHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+		if (!window) {
+			LOG_INFO("Failed to create GLFW window\n");
+			std::abort();
+		}
+
+		// 创建 opengl 上下文对象
+		SDL_GLContext context = SDL_GL_CreateContext(window);
+
+		if (!context) {
+			LOG_INFO("Failed to create OpenGl context\n");
+			std::abort();
+		}
+
 		mainWindow = window;
+		mainContext = context;
 	}
 
 	void Application::LoadGraphicApi() 
 	{
-		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		// 初始化 glad
+		if (!gladLoadGL()) {
 			LOG_INFO("Failed to initialize GLAD\n");
+			std::abort();
 		}
 	}
 
@@ -61,8 +88,6 @@ namespace hwj
 		if (!mainWindow) {
 			return;
 		}
-
-		GLFWwindow *win = (GLFWwindow *)mainWindow;
 
 		ShaderProgram shader;
 
@@ -79,15 +104,17 @@ namespace hwj
 		tank.Initialize();
 
 		// 主循环
-		float logicDelt = 1.0f / defLogicFps;
-		float rendDelt = 1.0f / defRenderFps;
+		Uint32 logicDelt = 1000 / defLogicFps;
+		Uint32 rendDelt  = 1000 / defRenderFps;
+		Uint32 curTime = SDL_GetTicks();
 
-		float logicCount = 0.0f;				// 逻辑贞计时器
-		float curTime = (float)glfwGetTime();
-		float newTime = 0.0f;					// 每帧开启时的时间
-		float frameTime = 0.0f;					// 每个渲染帧所用的时间
-		float frameLose = 0.25f;				// 最大掉帧时间
-		float interpAlpha = 0.0f;				// 当前帧的插值比率
+		Uint32 logicCount = 0;		// 逻辑贞计时器
+		
+		Uint32 newTime = 0;			// 每帧开启时的时间
+		Uint32 frameTime = 0;		// 每个渲染帧所用的时间
+		Uint32 frameLose = 250;		// 最大掉帧时间 ms
+
+		float interpAlpha = 0.0f;	// 当前帧的插值比率
 
 		TIMER tm = NULL;
 
@@ -96,12 +123,23 @@ namespace hwj
 			return;
 		}
 
-		while (!glfwWindowShouldClose(win)) {
+		SDL_Event sdlEvent;
+		SDL_Window *window = reinterpret_cast<SDL_Window *>(mainWindow);
+		bool isQuit = false;
+
+		while (!isQuit) {
+			while (SDL_PollEvent(&sdlEvent) != 0) {
+				if (sdlEvent.type == SDL_QUIT)
+				{
+					isQuit = true;
+				}
+			}
+
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			newTime = (float)glfwGetTime();
+			newTime = SDL_GetTicks();
 			frameTime = newTime - curTime;
-			
+
 			// 如果因为暂停或者某一帧渲染时间过长导致
 			// 真实时间间隔变长，重新设定帧时间
 			if (frameTime >= frameLose) {
@@ -114,25 +152,25 @@ namespace hwj
 
 			// 逻辑帧控制在 30 帧
 			while (logicCount >= logicDelt) {
-
+				
 				// 游戏控制逻辑，比如操作对象移动
-				tank.Update(mainWindow);
+				tank.Update(&sdlEvent);
 				logicCount -= logicDelt;
 			}
 
 			// 计算插值比率
-			interpAlpha = logicCount / logicDelt;
+			interpAlpha = static_cast<float>(logicCount) / 
+				static_cast<float>(logicDelt);
 
 			// 游戏对象渲染
 			tank.Draw(shader, interpAlpha);
 
 			// 双缓冲绘制
-			glfwSwapBuffers(win);
-			glfwPollEvents();
+			SDL_GL_SwapWindow(window);
 
 			// 当前帧时间限制, w 稳定帧率
 			if (frameTime < rendDelt) {
-				WaitTimer(tm, (int)(1000 * (rendDelt - frameTime)));
+				WaitTimer(tm, rendDelt - frameTime);
 			}
 		}
 

@@ -25,7 +25,7 @@ namespace hwj
 		void Draw(ShaderProgram &shader, float interpAlgha = 1.0f);
 
 		// 更新当前位置
-		void Update(WINDOWHANDLE handle);
+		void Update(GAMEEVNET handle);
 
 		// 移动
 		void Run(Action action);

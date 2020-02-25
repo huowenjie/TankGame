@@ -1,6 +1,8 @@
-#include "turret.h"
+#include <cmath>
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <sdl2/SDL.h>
+
+#include "turret.h"
 
 #include "app-debug.h"
 #include "texture.h"
@@ -53,17 +55,31 @@ namespace hwj
 	}
 
 	// 更新当前位置
-	void Turret::Update(WINDOWHANDLE handle)
+	void Turret::Update(GAMEEVNET handle)
 	{
+		SDL_Event *gameEvent = reinterpret_cast<SDL_Event *>(handle);
+
 		if (!handle) {
 			return;
 		}
-		GLFWwindow *win = (GLFWwindow *)handle;
 
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
 		mPrevTur = mTurModel;
+		
+		// ------------- 基本操作逻辑 ---------------
 
-		if (glfwGetKey(win, GLFW_KEY_Q) == GLFW_PRESS) { Run(LEFTROTATE);  }
-		if (glfwGetKey(win, GLFW_KEY_E) == GLFW_PRESS) { Run(RIGHTROTATE); }
+		if (state[SDL_SCANCODE_Q]) { Run(LEFTROTATE); }
+		if (state[SDL_SCANCODE_E]) { Run(RIGHTROTATE); }
+
+		// 计算射击方向和起始坐标
+		glm::mat4 tmp = glm::translate(mTurModel, glm::vec3(-mStartPos.x, -mStartPos.y, 0.0f));
+		glm::vec4 a(mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 0.0f, 1.0f);
+		glm::vec4 b(mStartPos.x - mWidth / 2, mStartPos.y - mHeight / 2 + 12.0f, 0.0f, 1.0f);
+
+		a = mModel * mTurModel * a;
+		b = mModel * mTurModel * b;
+
+		LOG_INFO("a-x = %f, a-y = %f, b-x = %f, b-y = %f\n", a.x, a.y, b.x, b.y);
 	}
 
 	// 旋转
