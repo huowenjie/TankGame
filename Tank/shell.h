@@ -1,15 +1,18 @@
 #ifndef __SHELL_H__
 #define __SHELL_H__
 
+#include <vector>
 #include "turret.h"
 
 namespace hwj 
 {
 	// 炮弹
-	class Shell
+	class Shell : public GameObject
 	{
 	public:
-		Shell();
+		friend class Turret;
+
+		Shell(float x = 0.0f, float y = 0.0f);
 		~Shell();
 
 		enum Status {
@@ -28,7 +31,10 @@ namespace hwj
 		void Update(WINDOWHANDLE handle);
 
 		// 设置移速
-		void SetSpeed(int speed);
+		void SetSpeed(float speed);
+
+		// 炮弹是否超出范围
+		bool IsOutOfRange() const;
 
 	public:
 		// 初始化
@@ -36,19 +42,13 @@ namespace hwj
 		void Terminate();
 
 	protected:
-		float mWidth;			// 宽
-		float mHeight;			// 高
+		glm::mat4 mShellModel;	// 炮弹位置模型矩阵
+		glm::mat4 mPrevShell;	// 上一帧炮弹模型矩阵
+		glm::vec4 mShootPos;	// 发射位置
 
-		unsigned int mVao;
-		unsigned int mVbo;
-		unsigned int mTex;
-
-		float mSpeed;			// 当前移动速度
-
-		glm::mat4 mModel;		// 模型矩阵
-		glm::mat4 mPrevModel;	// 上一帧矩阵数据
-		glm::vec4 mPosition;	// 位置
-		glm::vec4 mStartPos;	// 初始位置
+		float  mRange;			// 射程
+		float  mSpeed;			// 当前移动速度
+		Status mCurStatus;		// 当前状态
 	};
 }
 

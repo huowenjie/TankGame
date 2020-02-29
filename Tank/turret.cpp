@@ -2,31 +2,23 @@
 #include <glad/glad.h>
 #include <sdl2/SDL.h>
 
-#include "turret.h"
+#include "game.h"
+#include "shell.h"
 
 #include "app-debug.h"
 #include "texture.h"
 
 namespace hwj 
 {
-	Turret::Turret(Tank *chassic) :
-		mWidth(30.0f),
-		mHeight(70.0f),
-		mVao(0),
-		mVbo(0),
-		mTex(0),
+	Turret::Turret(Tank *chassic) : 
+		GameObject("res/turret.png", 0, 0, 30.0f, 70.0f),
+		mShootInterval(500U),
 		mRotateSpeed(1.0f),
+		mRotateAngle(0.0f),
 		mChassic(chassic)
 	{
-		mModel = glm::mat4(1.0f);
-		mPrevModel = mModel;
 		mTurModel = mModel;
 		mPrevTur = mModel;
-
-		mStartPos.x = 0.0f;
-		mStartPos.y = 0.0f;
-		mStartPos.z = 0.0f;
-		mStartPos.w = 0.0f;
 	}
 
 	Turret::~Turret()
@@ -68,18 +60,9 @@ namespace hwj
 		
 		// ------------- 基本操作逻辑 ---------------
 
-		if (state[SDL_SCANCODE_Q]) { Run(LEFTROTATE); }
-		if (state[SDL_SCANCODE_E]) { Run(RIGHTROTATE); }
-
-		// 计算射击方向和起始坐标
-		glm::mat4 tmp = glm::translate(mTurModel, glm::vec3(-mStartPos.x, -mStartPos.y, 0.0f));
-		glm::vec4 a(mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 0.0f, 1.0f);
-		glm::vec4 b(mStartPos.x - mWidth / 2, mStartPos.y - mHeight / 2 + 12.0f, 0.0f, 1.0f);
-
-		a = mModel * mTurModel * a;
-		b = mModel * mTurModel * b;
-
-		LOG_INFO("a-x = %f, a-y = %f, b-x = %f, b-y = %f\n", a.x, a.y, b.x, b.y);
+		if (state[SDL_SCANCODE_Q])		{ Run(LEFTROTATE);  }
+		if (state[SDL_SCANCODE_E])		{ Run(RIGHTROTATE); }
+		if (state[SDL_SCANCODE_SPACE])	{ Fire();			}
 	}
 
 	// 旋转
@@ -104,6 +87,44 @@ namespace hwj
 		}
 	}
 
+	void Turret::Fire()
+	{
+		static bool isReady = true;
+		static Uint32 prevTime = 0;
+		Uint32 curTime = SDL_GetTicks();
+
+		if (isReady) {
+			isReady = false;
+			LOG_INFO("Fire!\n");
+
+			Shell *shell = new Shell(mStartPos.x, mStartPos.y);
+
+			ObjectTag tag = AllocConsumable();
+			
+			shell->SetTag(tag);
+			shell->mModel = mModel;
+			shell->mShellModel = glm::translate(mTurModel,
+				glm::vec3(0.0f, 50.0f, 0.0f));
+
+			shell->mShootPos = 
+				mModel * shell->mShellModel * mStartPos;
+
+			shell->mPrevModel = mPrevModel;
+			shell->mPrevShell = shell->mShellModel;
+			shell->mCurStatus = Shell::FLYING;
+			shell->Initialize();
+
+			Game::AddObj(tag, shell);
+			prevTime = SDL_GetTicks() + mShootInterval;
+		} else {
+			LOG_INFO("Filling!\n");
+		}
+
+		if (!SDL_TICKS_PASSED(prevTime, curTime)) {
+			isReady = true;
+		}
+	}
+
 	// 初始化终止
 	void Turret::Initialize() 
 	{
@@ -117,31 +138,11 @@ namespace hwj
 			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 0.0f, 1.0f
 		};
 
-		// 创建顶点缓冲对象
-		glGenVertexArrays(1, &mVao);
-		glBindVertexArray(mVao);
-
-		glGenBuffers(1, &mVbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)0);
-
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)(2 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		// 加载纹理文件
-		mTex = TexLoader::GenDefTextures("res/turret.png");
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
+		GameObject::Initialize(vertex, sizeof(vertex) / sizeof(float));
 	}
 
-	void Turret::Terminate() 
+	void Turret::Terminate()
 	{
-		TexLoader::DelTextures(mTex);
-
-		glDeleteBuffers(1, &mVbo);
-		glDeleteVertexArrays(1, &mVao);
+		GameObject::Terminate();
 	}
 }

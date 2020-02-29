@@ -5,10 +5,10 @@
 
 namespace hwj 
 {
-	class Tank 
+	class Tank : public GameObject
 	{
 	public:
-		Tank(float x = 400.0f, float y = 300.0f);
+		Tank(RoleType type, float x = 400.0f, float y = 300.0f);
 		~Tank();
 
 		enum Action {
@@ -42,20 +42,10 @@ namespace hwj
 		void Terminate();
 
 	protected:
-		float mWidth;			// 宽
-		float mHeight;			// 高
+		RoleType mType;			// 角色类型
 
 		float mSpeed;			// 当前移动速度
 		float mRSpeed;			// 底盘旋转速度
-
-		unsigned int mVao;
-		unsigned int mVbo;
-		unsigned int mTex;
-
-		glm::mat4 mModel;		// 模型矩阵
-		glm::mat4 mPrevModel;	// 上一帧矩阵数据
-		glm::vec4 mPosition;	// 位置
-		glm::vec4 mStartPos;	// 初始位置
 
 		Turret mTurret;			// 所属炮塔
 	};

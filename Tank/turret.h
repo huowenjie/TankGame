@@ -1,18 +1,13 @@
 #ifndef __TURRET_H__
 #define __TURRET_H__
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "global.h"
-#include "shader.h"
+#include "game-obj.h"
 
 namespace hwj 
 {
 	class Tank;
 	// 炮塔
-	class Turret 
+	class Turret : public GameObject
 	{
 	public:
 		friend class Tank;
@@ -40,29 +35,27 @@ namespace hwj
 		// 运行
 		void Run(Action action);
 
+		// 开火
+		void Fire();
+
 	public:
-		// 初始化终止
+
+		// 初始化
 		void Initialize();
+
+		// 终止
 		void Terminate();
 
 	protected:
-		float mWidth;			// 宽
-		float mHeight;			// 高
+		unsigned int mShootInterval;	// 射击间隔 ms
 
-		unsigned int mVao;
-		unsigned int mVbo;
-		unsigned int mTex;
+		float mRotateSpeed;				// 当前炮塔转速
+		float mRotateAngle;				// 炮塔旋转角度
 
-		float mRotateSpeed;		// 当前炮塔转速
-		float mRotateAngle;		// 炮塔旋转角度
+		glm::mat4 mTurModel;			// 炮塔模型矩阵
+		glm::mat4 mPrevTur;				// 上一帧炮塔模型矩阵
 
-		glm::mat4 mModel;		// 底盘模型矩阵
-		glm::mat4 mPrevModel;	// 上一帧矩阵数据
-		glm::mat4 mTurModel;	// 炮塔模型矩阵
-		glm::mat4 mPrevTur;		// 上一帧炮塔模型矩阵
-		glm::vec4 mStartPos;	// 初始位置
-
-		Tank *mChassic;			// 所属坦克底盘
+		Tank *mChassic;					// 所属坦克底盘
 	};
 }
 

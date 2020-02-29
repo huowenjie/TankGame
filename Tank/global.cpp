@@ -1,33 +1,45 @@
 #include "global.h"
-#include <Windows.h>
-#include <time.h>
 
 namespace hwj
 {
-	bool CreateTimer(TIMER &timer) 
+	// ½ÇÉ«ÀàÐÍ
+	const RoleType PRIMARY_ROLE = 1;
+	const RoleType ENEMY_ROLE = 2;
+	const RoleType NPC_ROLE = 3;
+
+	static int gCurMapTag = 0;
+	static int gCurPriTag = 100;
+	static int gCurCosTag = 200;
+	static int gCurEnmTag = 300;
+	static int gCurNpcTag = 400;
+
+	ObjectTag AllocMap() 
 	{
-		timer = CreateWaitableTimer(NULL, FALSE, NULL);
-		return timer != NULL;
+		return (gCurMapTag >= 99) ? -1 : gCurMapTag++;
 	}
-	
-	void WaitTimer(TIMER &timer, int milliSecond)
+
+	ObjectTag AllocPrimaryTag() 
 	{
-		if (!timer || milliSecond <= 0) {
-			return;
+		return (gCurPriTag >= 199) ? -1 : gCurPriTag++;
+	}
+
+	ObjectTag AllocConsumable()
+	{
+		if (gCurCosTag >= 299) {
+			gCurCosTag = 0;
+			return gCurCosTag;
 		}
 
-		LARGE_INTEGER li = { 0 };
-		li.QuadPart = -milliSecond * 10000;
-
-		if (!SetWaitableTimer(timer, &li, 0, NULL, NULL, FALSE)) {
-			return;
-		}
-
-		WaitForSingleObject(timer, INFINITE);
+		return gCurCosTag++;
 	}
-	
-	void DestroyTimer(TIMER &timer) 
+
+	ObjectTag AllocEnemy()
 	{
-		CloseHandle(timer);
+		return (gCurEnmTag >= 399) ? -1 : gCurEnmTag++;
+	}
+
+	ObjectTag AllocNpc()
+	{
+		return (gCurNpcTag >= 499) ? -1 : gCurNpcTag++;
 	}
 }

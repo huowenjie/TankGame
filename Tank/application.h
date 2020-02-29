@@ -1,12 +1,11 @@
 #ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
-#include "global.h"
+#include "game.h"
 
 namespace hwj
 {
 	class Tank;
-
 	class Application 
 	{
 	public:
@@ -40,6 +39,8 @@ namespace hwj
 		// Âß¼­Ö¡ºÍäÖÈ¾Ö¡µÄÖµ
 		int defRenderFps;
 		int defLogicFps;
+
+		Game mGame;
 	};
 }
 

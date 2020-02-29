@@ -7,23 +7,12 @@
 
 namespace hwj
 {
-	Tank::Tank(float x, float y) : 
-		mWidth(60.0f), 
-		mHeight(60.0f),
+	Tank::Tank(RoleType type, float x, float y) :
+		GameObject("res/chassis.png", x, y, 60.0f, 60.0f),
+		mType(type),
 		mSpeed(2.0f),
-		mRSpeed(1.0f),
-		mVao(0),
-		mVbo(0),
-		mTex(0)
+		mRSpeed(1.0f)
 	{
-		mModel = glm::mat4(1.0f);
-		mPrevModel = glm::mat4(1.0f);
-
-		mStartPos.x = x;
-		mStartPos.y = y;
-		mStartPos.z = 0.0f;
-		mStartPos.w = 1.0f;
-		mPosition = mStartPos;
 	}
 
 	Tank::~Tank() 
@@ -62,17 +51,25 @@ namespace hwj
 
 		// ------------- 基本操作逻辑 ---------------
 
-		if (state[SDL_SCANCODE_W]) { Run(Tank::UP);		}
-		if (state[SDL_SCANCODE_S]) { Run(Tank::DOWN);	}
-		if (state[SDL_SCANCODE_A]) { Run(Tank::LEFT);	}
-		if (state[SDL_SCANCODE_D]) { Run(Tank::RIGHT);	}
+		if (mType == PRIMARY_ROLE) {
+			if (state[SDL_SCANCODE_W]) { Run(Tank::UP); }
+			if (state[SDL_SCANCODE_S]) { Run(Tank::DOWN); }
+			if (state[SDL_SCANCODE_A]) { Run(Tank::LEFT); }
+			if (state[SDL_SCANCODE_D]) { Run(Tank::RIGHT); }
+
+			// 设置炮塔的模型矩阵
+			mTurret.Update(handle);
+			mTurret.mModel = mModel;
+		} else if (mType == ENEMY_ROLE) {
+			// 敌人坦克，自动运行
+		} else if (mType == NPC_ROLE) {
+			// NPC
+		} else {
+			// 其他
+		}
 
 		// 计算坦克当前位置
 		mPosition = mModel * mStartPos;
-
-		// 设置炮塔的模型矩阵
-		mTurret.Update(handle);
-		mTurret.mModel = mModel;
 
 		// -------------- 碰撞逻辑 ----------------
 	}
@@ -125,24 +122,7 @@ namespace hwj
 			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 1.0f
 		};
 
-		// 创建顶点缓冲对象
-		glGenVertexArrays(1, &mVao);
-		glBindVertexArray(mVao);
-
-		glGenBuffers(1, &mVbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)0);
-		
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)(2 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		// 加载纹理文件
-		mTex = TexLoader::GenDefTextures("res/chassis.png");
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
+		GameObject::Initialize(vertex, sizeof(vertex) / sizeof(float));
 
 		// 初始化炮塔
 		mTurret.mStartPos = mPosition;

@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <vector>
 #include <sdl2/SDL.h>
 
 #undef __gl_h_
@@ -7,7 +8,7 @@
 #include "application.h"
 #include "app-debug.h"
 #include "shader.h"
-#include "tank.h"
+#include "game.h"
 
 namespace hwj 
 {
@@ -93,45 +94,34 @@ namespace hwj
 
 		shader.LoadShaderFile("triangle.vert", "triangle.frag");
 		shader.UseProgram();
+		mGame.StartGame();
 
+		// 设置投影矩阵，将 800*600 的窗口元素投影到 opengl -1，1 的范围
 		glm::mat4 projection = 
 			glm::ortho(0.0f, (float)winWidth, 0.0f, (float)winHeight, -1.0f, 1.0f);
 		shader.SetMat4f("projection", &projection[0][0]);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-		Tank tank;
-		tank.Initialize();
-
 		// 主循环
 		Uint32 logicDelt = 1000 / defLogicFps;
 		Uint32 rendDelt  = 1000 / defRenderFps;
-		Uint32 curTime = SDL_GetTicks();
+		Uint32 curTime   = SDL_GetTicks();
 
 		Uint32 logicCount = 0;		// 逻辑贞计时器
-		
-		Uint32 newTime = 0;			// 每帧开启时的时间
-		Uint32 frameTime = 0;		// 每个渲染帧所用的时间
-		Uint32 frameLose = 250;		// 最大掉帧时间 ms
-
+		Uint32 newTime    = 0;		// 每帧开启时的时间
+		Uint32 frameTime  = 0;		// 每个渲染帧所用的时间
+		Uint32 frameLose  = 250;	// 最大掉帧时间 ms
 		float interpAlpha = 0.0f;	// 当前帧的插值比率
-
-		TIMER tm = NULL;
-
-		if (!CreateTimer(tm) || !tm) {
-			LOG_INFO("CreateTimer error!\n");
-			return;
-		}
 
 		SDL_Event sdlEvent;
 		SDL_Window *window = reinterpret_cast<SDL_Window *>(mainWindow);
-		bool isQuit = false;
 
-		while (!isQuit) {
+		while (mGame.IsRunning()) {
 			while (SDL_PollEvent(&sdlEvent) != 0) {
 				if (sdlEvent.type == SDL_QUIT)
 				{
-					isQuit = true;
+					mGame.StopGame();
 				}
 			}
 
@@ -152,9 +142,7 @@ namespace hwj
 
 			// 逻辑帧控制在 30 帧
 			while (logicCount >= logicDelt) {
-				
-				// 游戏控制逻辑，比如操作对象移动
-				tank.Update(&sdlEvent);
+				Game::UpdateAll(&sdlEvent);
 				logicCount -= logicDelt;
 			}
 
@@ -162,21 +150,18 @@ namespace hwj
 			interpAlpha = static_cast<float>(logicCount) / 
 				static_cast<float>(logicDelt);
 
-			// 游戏对象渲染
-			tank.Draw(shader, interpAlpha);
+			// 渲染游戏对象
+			Game::DrawAll(shader, interpAlpha);
 
 			// 双缓冲绘制
 			SDL_GL_SwapWindow(window);
 
-			// 当前帧时间限制, w 稳定帧率
+			// 当前帧时间限制, 稳定帧率，减少 CPU 损耗
 			if (frameTime < rendDelt) {
-				WaitTimer(tm, rendDelt - frameTime);
+				SDL_Delay(rendDelt - frameTime);
 			}
 		}
 
-		DestroyTimer(tm);
-
-		tank.Terminate();
 		shader.DeleteShader();
 	}
 }
