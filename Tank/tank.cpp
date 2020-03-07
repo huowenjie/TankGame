@@ -4,6 +4,7 @@
 #include "tank.h"
 #include "app-debug.h"
 #include "texture.h"
+#include "game.h"
 
 namespace hwj
 {
@@ -68,10 +69,34 @@ namespace hwj
 			// 其他
 		}
 
-		// 计算坦克当前位置
+		// ----------计算坦克当前位置---------------
+
 		mPosition = mModel * mStartPos;
 
+		GameObject::Update(handle);
+
 		// -------------- 碰撞逻辑 ----------------
+
+		// 碰撞检测
+
+		std::map<ObjectTag, GameObject *> objs = Game::GetObjMap();
+		std::map<ObjectTag, GameObject *>::const_iterator it =
+			objs.begin();
+
+		// 暂时先用此方法，以后再优化
+		for (; it != objs.end(); ++it) {
+			if (it->first == mTag) {
+				continue;
+			}
+
+			GameObject *elem = it->second;
+
+			if (Game::SphereCollision(*this, *elem)) {
+				mModel = mPrevModel;
+				mTurret.mModel = mPrevModel;
+				LOG_INFO("Collision!\n");
+			}
+		}
 	}
 
 	void Tank::Run(Action action)

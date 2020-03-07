@@ -9,6 +9,7 @@
 
 #include "global.h"
 #include "shader.h"
+#include "game-math.h"
 
 namespace hwj 
 {
@@ -30,15 +31,29 @@ namespace hwj
 		ObjectTag GetTag() const;
 
 		// 绘制对象
-		virtual void Draw(ShaderProgram &shader, float interpAlgha = 1.0f) = 0;
+		virtual void Draw(ShaderProgram &shader, float interpAlgha = 1.0f);
 
 		// 更新当前位置
-		virtual void Update(GAMEEVNET handle) = 0;
+		virtual void Update(GAMEEVNET handle);
 
 	public:
 		// 初始化
 		virtual void Initialize(float *vertex, int num);
 		virtual void Terminate();
+
+		// 获取当前对象坐标
+		Vector2D<float> GetPosition() const;
+
+		// 获取包围盒数据
+		const Vector4D<float> & GetAABB() const;
+
+		// 获取包围求数据
+		const Vector3D<float> & GetBoundingSphere() const;
+
+	protected:
+
+		// 销毁自身
+		void DestroySelf();
 
 	protected:
 		ObjectTag mTag;
@@ -54,6 +69,9 @@ namespace hwj
 		glm::mat4 mPrevModel;	// 上一帧矩阵数据
 		glm::vec4 mPosition;	// 位置
 		glm::vec4 mStartPos;	// 初始位置
+
+		Vector4D<float> mAABB;	// 包围盒
+		Vector3D<float> mSphere;// 包围球
 
 		std::string mResPath;	// 资源路径
 	};

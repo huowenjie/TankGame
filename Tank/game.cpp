@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "game.h"
 #include "shader.h"
 #include "tank.h"
@@ -79,6 +81,32 @@ namespace hwj
 			it != mObjTree.end(); ++it) {
 			it->second->Draw(shader, interpAlpha);
 		}
+	}
+
+	bool Game::AABBCollision(
+		const GameObject &objA, const GameObject &objB) 
+	{
+		const Vector4D<float> & aAABB = objA.GetAABB();
+		const Vector4D<float> & bAABB = objB.GetAABB();
+
+		bool test = 
+			(aAABB.mB < bAABB.mA) || (bAABB.mB < aAABB.mA) ||
+			(aAABB.mC > bAABB.mD) || (bAABB.mC > aAABB.mD);
+
+		return !test;
+	}
+
+	bool Game::SphereCollision(
+		const GameObject &objA, const GameObject &objB)
+	{
+		const Vector3D<float> & aSphere = objA.GetBoundingSphere();
+		const Vector3D<float> & bSphere = objB.GetBoundingSphere();
+
+		float distSquared = 
+			std::powf(aSphere.mX - bSphere.mX, 2) +
+			std::powf(aSphere.mY - bSphere.mY, 2);
+
+		return distSquared <= std::powf(aSphere.mZ + bSphere.mZ, 2);
 	}
 
 	void Game::AddObj(ObjectTag tag, GameObject *obj)

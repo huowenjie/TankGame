@@ -2,7 +2,6 @@
 #define __GAME_H__
 
 #include <map>
-
 #include "game-obj.h"
 
 namespace hwj 
@@ -30,6 +29,14 @@ namespace hwj
 
 		// 依次渲染对象
 		static void DrawAll(ShaderProgram &shader, float interpAlpha);
+
+		// AABB 碰撞
+		static bool AABBCollision(
+			const GameObject &objA, const GameObject &objB);
+
+		// 球体碰撞
+		static bool SphereCollision(
+			const GameObject &objA, const GameObject &objB);
 
 		static void AddObj(ObjectTag tag, GameObject *obj);
 		static GameObject * RemoveObj(ObjectTag tag);

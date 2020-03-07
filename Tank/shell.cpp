@@ -10,7 +10,7 @@
 namespace hwj 
 {
 	Shell::Shell(float x, float y) :
-		GameObject("res/shell.png", x, y, 8.0f, 40.0f),
+		GameObject("res/shell.png", x, y, 10.0f, 20.0f),
 		mRange(300.0f),
 		mSpeed(10.0f),
 		mCurStatus(AWAIT)
@@ -50,23 +50,15 @@ namespace hwj
 
 			// 判断射程
 			if (IsOutOfRange()) {
-
-				// 停止渲染移除自身
-				GameObject *obj = Game::RemoveObj(mTag);
-
-				if (obj) {
-					obj->Terminate();
-					delete obj;
-				}
+				DestroySelf();
 			}
 			break;
 
 		case EXPLODE:
-
 			break;
 
 		case STRIKE:
-
+			DestroySelf();
 			break;
 
 		case DESTROY:
@@ -77,6 +69,28 @@ namespace hwj
 		default:
 
 			break;
+		}
+
+		GameObject::Update(handle);
+
+		// -------------- 碰撞逻辑 ----------------
+
+		std::map<ObjectTag, GameObject *> objs = Game::GetObjMap();
+		std::map<ObjectTag, GameObject *>::const_iterator it =
+			objs.begin();
+
+		// 暂时先用此方法，以后再优化
+		for (; it != objs.end(); ++it) {
+			if (it->first == mTag) {
+				continue;
+			}
+
+			GameObject *elem = it->second;
+
+			if (Game::SphereCollision(*this, *elem)) {
+				mCurStatus = STRIKE;
+				LOG_INFO("Explode!\n");
+			}
 		}
 	}
 
