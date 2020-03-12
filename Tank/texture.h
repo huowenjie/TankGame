@@ -3,18 +3,22 @@
 
 namespace hwj 
 {
-	// 纹理生成器
-	class TexLoader
-	{
-	public:
-		TexLoader();
-		~TexLoader();
+	// 纹理信息
+	typedef struct AnimTexInfo_st {
+		unsigned int	mTex;
+		int				mNum;
+		float			mWidth;
+		float			mHeight;
+	} AnimTexInfo;
 
-	public:
-		// 生成默认纹理
-		static int GenDefTextures(const char *path);
-		static void DelTextures(unsigned int textures);
-	};
+	// 生成默认纹理
+	int GenDefTextures(const char *path);
+
+	// 生成逐帧动画纹理
+	AnimTexInfo GenAnimTextures(const char *path, int num = 1);
+
+	// 销毁纹理对象
+	void DelTextures(unsigned int textures);
 }
 
 #endif // __TEXTURE_H__

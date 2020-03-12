@@ -10,7 +10,6 @@ namespace hwj
 	GameObject::GameObject(
 		const std::string &resPath, float startX, float startY,
 		float width, float height) :
-		mTag(0),
 		mWidth(width),
 		mHeight(height),
 		mVao(0),
@@ -48,6 +47,7 @@ namespace hwj
 
 	void GameObject::Draw(ShaderProgram &shader, float interpAlgha)
 	{
+		shader.SetInt("turret", 0);
 	}
 
 	// 更新当前位置
@@ -71,20 +71,23 @@ namespace hwj
 		}
 
 		// 创建顶点缓冲对象
-		glGenVertexArrays(1, &mVao);
+		glCreateVertexArrays(1, &mVao);
 		glBindVertexArray(mVao);
 
-		glGenBuffers(1, &mVbo);
+		glCreateBuffers(1, &mVbo);
 		glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-		glBufferData(GL_ARRAY_BUFFER, num * sizeof(float), vertex, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
+		glNamedBufferStorage(mVbo, num * sizeof(float), vertex, GL_DYNAMIC_STORAGE_BIT);
+
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)0);
+		glEnableVertexAttribArray(0);
 
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (const void *)(2 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
 		// 加载纹理文件
-		mTex = TexLoader::GenDefTextures(mResPath.c_str());
+		if (!glIsTexture(mTex) && !mResPath.empty()) {
+			mTex = GenDefTextures(mResPath.c_str());
+		}
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -92,7 +95,7 @@ namespace hwj
 	
 	void GameObject::Terminate() 
 	{
-		TexLoader::DelTextures(mTex);
+		DelTextures(mTex);
 
 		glDeleteBuffers(1, &mVbo);
 		glDeleteVertexArrays(1, &mVao);
@@ -115,7 +118,7 @@ namespace hwj
 
 	void GameObject::DestroySelf()
 	{
-		GameObject *obj = Game::RemoveObj(mTag);
+		GameObject *obj = Game::RemoveObj(mTag.mCode);
 
 		if (obj) {
 			obj->Terminate();

@@ -6,6 +6,7 @@
 namespace hwj 
 {
 	class Tank;
+
 	// езкЧ
 	class Turret : public GameObject
 	{

@@ -4,10 +4,12 @@
 #include "shader.h"
 #include "tank.h"
 #include "shell.h"
+#include "texture.h"
+#include "anim-frame.h"
 
 namespace hwj 
 {
-	std::map<ObjectTag, GameObject *> Game::mObjTree;
+	std::map<ObjectCode, GameObject *> Game::mObjTree;
 
 	Game::Game() : mIsRunning(false)
 	{
@@ -20,15 +22,23 @@ namespace hwj
 	void Game::StartGame()
 	{
 		Tank *tank = new Tank(PRIMARY_ROLE);
-		tank->SetTag(AllocPrimaryTag());
+		tank->SetTag(AllocObjTag(TANK_TYPE));
 		tank->Initialize();
 
 		Tank *enemy = new Tank(ENEMY_ROLE, 200.0f, 400.0f);
-		enemy->SetTag(AllocPrimaryTag());
+		enemy->SetTag(AllocObjTag(TANK_TYPE));
 		enemy->Initialize();
 
-		AddObj(tank->GetTag(), tank);
-		AddObj(enemy->GetTag(), enemy);
+		Animation *anim = new Animation(400.0f, 542.0f);
+		anim->SetAnimTexInfo(GenAnimTextures("res/explode.png"));
+		anim->SetTag(AllocObjTag(ANIM_TYPE));
+		anim->Initialize();
+		anim->SetLoopMode(true);
+		anim->Play();
+
+		AddObj(tank->GetTag().mCode,  tank);
+		AddObj(enemy->GetTag().mCode, enemy);
+		AddObj(anim->GetTag().mCode,  anim);
 
 		mIsRunning = true;
 	}
@@ -37,8 +47,8 @@ namespace hwj
 	{
 		mIsRunning = false;
 
-		std::map<ObjectTag, GameObject *> &objTree = GetObjMap();
-		std::map<ObjectTag, GameObject *>::iterator it =
+		std::map<ObjectCode, GameObject *> &objTree = GetObjMap();
+		std::map<ObjectCode, GameObject *>::iterator it =
 			objTree.begin();
 
 		while (!objTree.empty() && it != objTree.end()) {
@@ -63,8 +73,8 @@ namespace hwj
 	{
 		size_t size = mObjTree.size();
 
-		std::map<ObjectTag, GameObject *>::iterator it = mObjTree.begin();
-		std::map<ObjectTag, GameObject *>::iterator tmp;
+		std::map<ObjectCode, GameObject *>::iterator it = mObjTree.begin();
+		std::map<ObjectCode, GameObject *>::iterator tmp;
 
 		// 游戏控制逻辑，比如操作对象移动
 		while (it != mObjTree.end()) {
@@ -77,7 +87,7 @@ namespace hwj
 	void Game::DrawAll(ShaderProgram &shader, float interpAlpha)
 	{
 		// 游戏对象渲染
-		for (std::map<ObjectTag, GameObject *>::iterator it = mObjTree.begin();
+		for (std::map<ObjectCode, GameObject *>::iterator it = mObjTree.begin();
 			it != mObjTree.end(); ++it) {
 			it->second->Draw(shader, interpAlpha);
 		}
@@ -109,28 +119,28 @@ namespace hwj
 		return distSquared <= std::powf(aSphere.mZ + bSphere.mZ, 2);
 	}
 
-	void Game::AddObj(ObjectTag tag, GameObject *obj)
+	void Game::AddObj(ObjectCode code, GameObject *obj)
 	{
 		if (obj) {
 			mObjTree.insert(
-				std::map<ObjectTag, GameObject *>::value_type(tag, obj));
+				std::map<ObjectCode, GameObject *>::value_type(code, obj));
 		}
 	}
 
-	GameObject * Game::RemoveObj(ObjectTag tag)
+	GameObject * Game::RemoveObj(ObjectCode code)
 	{
 		if (mObjTree.empty()) {
 			return nullptr;
 		}
 
-		std::map<ObjectTag, GameObject *>::iterator it = mObjTree.find(tag);
+		std::map<ObjectCode, GameObject *>::iterator it = mObjTree.find(code);
 		GameObject *ret = it->second;
 
 		mObjTree.erase(it);
 		return ret;
 	}
 
-	std::map<ObjectTag, GameObject *> & Game::GetObjMap()
+	std::map<ObjectCode, GameObject *> & Game::GetObjMap()
 	{
 		return mObjTree;
 	}

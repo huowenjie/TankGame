@@ -21,6 +21,7 @@ namespace hwj
 		// 结束游戏
 		void StopGame();
 
+		// 是否在运行
 		const bool & IsRunning() const;
 
 	public:
@@ -38,12 +39,12 @@ namespace hwj
 		static bool SphereCollision(
 			const GameObject &objA, const GameObject &objB);
 
-		static void AddObj(ObjectTag tag, GameObject *obj);
-		static GameObject * RemoveObj(ObjectTag tag);
-		static std::map<ObjectTag, GameObject *> & GetObjMap();
+		static void AddObj(ObjectCode code, GameObject *obj);
+		static GameObject * RemoveObj(ObjectCode code);
+		static std::map<ObjectCode, GameObject *> & GetObjMap();
 
 	protected:
-		static std::map<ObjectTag, GameObject *> mObjTree;
+		static std::map<ObjectCode, GameObject *> mObjTree;
 		bool mIsRunning;
 	};
 

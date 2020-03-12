@@ -6,6 +6,7 @@
 #include "app-debug.h"
 #include "texture.h"
 #include "game.h"
+#include "anim-frame.h"
 
 namespace hwj 
 {
@@ -25,6 +26,8 @@ namespace hwj
 
 	void Shell::Draw(ShaderProgram &shader, float interpAlgha) 
 	{
+		GameObject::Draw(shader, interpAlgha);
+
 		shader.SetInt("turret", 1);
 		shader.SetFloat("interpAlpha",	interpAlgha);
 		shader.SetMat4f("prevModel",	&mPrevModel[0][0]);
@@ -50,19 +53,12 @@ namespace hwj
 
 			// 判断射程
 			if (IsOutOfRange()) {
-				DestroySelf();
+				mCurStatus = EXPLODE;
 			}
 			break;
 
 		case EXPLODE:
-			break;
-
-		case STRIKE:
-			DestroySelf();
-			break;
-
-		case DESTROY:
-
+			Explode();
 			break;
 
 		case AWAIT:
@@ -75,20 +71,20 @@ namespace hwj
 
 		// -------------- 碰撞逻辑 ----------------
 
-		std::map<ObjectTag, GameObject *> objs = Game::GetObjMap();
-		std::map<ObjectTag, GameObject *>::const_iterator it =
+		std::map<ObjectCode, GameObject *> objs = Game::GetObjMap();
+		std::map<ObjectCode, GameObject *>::const_iterator it =
 			objs.begin();
 
 		// 暂时先用此方法，以后再优化
 		for (; it != objs.end(); ++it) {
-			if (it->first == mTag) {
+			if (it->first == mTag.mCode) {
 				continue;
 			}
 
 			GameObject *elem = it->second;
 
 			if (Game::SphereCollision(*this, *elem)) {
-				mCurStatus = STRIKE;
+				mCurStatus = EXPLODE;
 				LOG_INFO("Explode!\n");
 			}
 		}
@@ -109,6 +105,23 @@ namespace hwj
 
 		float dist = std::sqrtf(sqx + sqy);
 		return dist >= mRange;
+	}
+
+	void Shell::Explode()
+	{
+		LOG_INFO("Explode! x = %f, y = %f\n", mPosition.x, mPosition.y);
+
+		// 播放爆炸的动画并且
+		Animation *anim = new Animation(mPosition.x, mPosition.y);
+		anim->SetAnimTexInfo(GenAnimTextures("res/explode.png"));
+		anim->SetTag(AllocObjTag(ANIM_TYPE));
+		anim->Initialize();
+		anim->SetLoopMode(false);
+		anim->Play();
+
+		Game::AddObj(anim->GetTag().mCode, anim);
+
+		DestroySelf();
 	}
 
 	void Shell::Initialize() 

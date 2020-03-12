@@ -11,7 +11,7 @@
 #include "shader.h"
 #include "game-math.h"
 
-namespace hwj 
+namespace hwj
 {
 	// сно╥╤тоС
 	class GameObject 

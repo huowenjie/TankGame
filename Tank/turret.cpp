@@ -33,6 +33,8 @@ namespace hwj
 	// »æÖÆ¶ÔÏó
 	void Turret::Draw(ShaderProgram &shader, float interpAlgha)
 	{
+		GameObject::Draw(shader, interpAlgha);
+
 		shader.SetInt("turret", 1);
 		shader.SetFloat("interpAlpha",	interpAlgha);
 		shader.SetMat4f("prevModel",	&mPrevModel[0][0]);
@@ -99,9 +101,7 @@ namespace hwj
 
 			Shell *shell = new Shell(mStartPos.x, mStartPos.y);
 
-			ObjectTag tag = AllocConsumable();
-			
-			shell->SetTag(tag);
+			shell->SetTag(AllocObjTag(SHELL_TYPE));
 			shell->mModel = mModel;
 			shell->mShellModel = glm::translate(mTurModel,
 				glm::vec3(0.0f, 50.0f, 0.0f));
@@ -114,7 +114,7 @@ namespace hwj
 			shell->mCurStatus = Shell::FLYING;
 			shell->Initialize();
 
-			Game::AddObj(tag, shell);
+			Game::AddObj(shell->GetTag().mCode, shell);
 			prevTime = SDL_GetTicks() + mShootInterval;
 		} else {
 			LOG_INFO("Filling!\n");

@@ -16,11 +16,9 @@ namespace hwj
 		~Shell();
 
 		enum Status {
-			AWAIT,		// 待命
-			FLYING,		// 射击飞行过程
-			EXPLODE,	// 爆炸
-			STRIKE,		// 撞击
-			DESTROY		// 被系统回收
+			AWAIT,	// 待命
+			FLYING,	// 射击飞行过程
+			EXPLODE	// 爆炸
 		};
 
 	public:
@@ -35,6 +33,9 @@ namespace hwj
 
 		// 炮弹是否超出范围
 		bool IsOutOfRange() const;
+
+		// 爆炸
+		void Explode();
 
 	public:
 		// 初始化

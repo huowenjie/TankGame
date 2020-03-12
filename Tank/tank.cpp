@@ -22,7 +22,8 @@ namespace hwj
 
 	void Tank::Draw(ShaderProgram &shader, float interpAlgha)
 	{
-		shader.SetInt("turret", 0);
+		GameObject::Draw(shader, interpAlgha);
+
 		shader.SetFloat("interpAlpha", interpAlgha);
 		shader.SetMat4f("prevModel", &mPrevModel[0][0]);
 		shader.SetMat4f("model", &mModel[0][0]);
@@ -79,13 +80,13 @@ namespace hwj
 
 		// 碰撞检测
 
-		std::map<ObjectTag, GameObject *> objs = Game::GetObjMap();
-		std::map<ObjectTag, GameObject *>::const_iterator it =
+		std::map<ObjectCode, GameObject *> objs = Game::GetObjMap();
+		std::map<ObjectCode, GameObject *>::const_iterator it =
 			objs.begin();
 
 		// 暂时先用此方法，以后再优化
 		for (; it != objs.end(); ++it) {
-			if (it->first == mTag) {
+			if (it->first == mTag.mCode) {
 				continue;
 			}
 
@@ -157,9 +158,6 @@ namespace hwj
 	void Tank::Terminate()
 	{
 		mTurret.Terminate();
-		TexLoader::DelTextures(mTex);
-
-		glDeleteBuffers(1, &mVbo);
-		glDeleteVertexArrays(1, &mVao);		
+		GameObject::Terminate();
 	}
 }
