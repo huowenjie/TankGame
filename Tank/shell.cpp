@@ -13,11 +13,11 @@ namespace hwj
 	Shell::Shell(float x, float y) :
 		GameObject("res/shell.png", x, y, 10.0f, 20.0f),
 		mRange(300.0f),
-		mSpeed(10.0f),
+		mSpeed(20.0f),
 		mCurStatus(AWAIT)
 	{
 		mShellModel = glm::mat4(1.0f);
-		mPrevShell = mShellModel;
+		mShellBasic = mShellModel;
 	}
 
 	Shell::~Shell()
@@ -28,15 +28,12 @@ namespace hwj
 	{
 		GameObject::Draw(shader, interpAlgha);
 
-		shader.SetInt("turret", 1);
-		shader.SetFloat("interpAlpha",	interpAlgha);
+		shader.SetFloat("interpAlpha",  interpAlgha);
 		shader.SetMat4f("prevModel",	&mPrevModel[0][0]);
 		shader.SetMat4f("model",		&mModel[0][0]);
-		shader.SetMat4f("turModel",		&mShellModel[0][0]);
-		shader.SetMat4f("prevTur",		&mPrevShell[0][0]);
 
-		glBindTexture(GL_TEXTURE_2D, mTex);
-		glBindVertexArray(mVao);
+		glBindTexture(GL_TEXTURE_2D, mVertObj.mTex);
+		glBindVertexArray(mVertObj.mVao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 	}
@@ -44,12 +41,14 @@ namespace hwj
 	// 更新当前位置
 	void Shell::Update(WINDOWHANDLE handle) 
 	{
-		mPrevShell = mShellModel;
+		mPrevModel = mModel;
 
 		switch (mCurStatus) {
 		case FLYING:
 			mShellModel = glm::translate(mShellModel, glm::vec3(0.0f, mSpeed, 0.0f));
-			mPosition = mModel * mShellModel * mStartPos;
+
+			mModel = mRun * mShellModel * mShellBasic;
+			mPosition = mRun * mShellModel * mStartPos;
 
 			// 判断射程
 			if (IsOutOfRange()) {
@@ -63,7 +62,6 @@ namespace hwj
 
 		case AWAIT:
 		default:
-
 			break;
 		}
 
@@ -85,7 +83,7 @@ namespace hwj
 
 			if (Game::SphereCollision(*this, *elem)) {
 				mCurStatus = EXPLODE;
-				LOG_INFO("Explode!\n");
+				LOG_INFO("Collision Explode!\n");
 			}
 		}
 	}
@@ -127,18 +125,32 @@ namespace hwj
 	void Shell::Initialize() 
 	{
 		float vertex[24] = {
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 1.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y + mHeight / 2, 1.0f, 1.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 1.0f, 0.0f,
+			-0.5f,  0.5f, 0.0f, 1.0f,
+			 0.5f,  0.5f, 1.0f, 1.0f,
+			 0.5f, -0.5f, 1.0f, 0.0f,
 
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2, 1.0f, 0.0f,
-			mStartPos.x - mWidth / 2, mStartPos.y - mHeight / 2, 0.0f, 0.0f,
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2, 0.0f, 1.0f
+			 0.5f, -0.5f, 1.0f, 0.0f,
+			-0.5f, -0.5f, 0.0f, 0.0f,
+			-0.5f,  0.5f, 0.0f, 1.0f
 		};
 
-		GameObject::Initialize(vertex, sizeof(vertex) / sizeof(float));
+		GameObject::LoadVertex(vertex, sizeof(vertex) / sizeof(float));
+		GameObject::Initialize();
+
+		// 初始化物体位置
+		mShellModel = glm::translate(mShellModel, glm::vec3(0, 50.0f, 0.0f));
+		mShellBasic = mTranslate * mRotate * mScale;
+		mModel = mRun * mShellModel * mShellBasic;
+		mPrevModel = mModel;
+
+		mPosition = mRun * mShellModel * mStartPos;
+		mShootPos = mPosition;
+
+		if (!GameObject::IsVertexObjExist(SHELL_TYPE)) {
+			GameObject::AddVertexObj(SHELL_TYPE, mVertObj);
+		}
 	}
-	
+
 	void Shell::Terminate() 
 	{
 		GameObject::Terminate();

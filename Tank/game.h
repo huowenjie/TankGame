@@ -1,13 +1,15 @@
 #ifndef __GAME_H__
 #define __GAME_H__
 
-#include <map>
+#include <vector>
 #include "game-obj.h"
 
 namespace hwj 
 {
-	// 游戏控制器
+	class GameMap;
 	class ShaderProgram;
+
+	// 游戏控制器
 	class Game 
 	{
 	public:
@@ -15,6 +17,12 @@ namespace hwj
 		~Game();
 
 	public:
+		// 设置/移除游戏地图
+		static void SetGameMap(GameMap *gameMap);
+
+		// 设置摄像机
+		void SetCamera(glm::mat4 &camera);
+
 		// 开始游戏
 		void StartGame();
 
@@ -25,6 +33,9 @@ namespace hwj
 		const bool & IsRunning() const;
 
 	public:
+		static void RollMap(GAMEEVNET gameEvent);
+		static void DrawMap(ShaderProgram &shader, float interpAlpha);
+
 		// 依次执行对象逻辑
 		static void UpdateAll(GAMEEVNET gameEvent);
 
@@ -45,9 +56,10 @@ namespace hwj
 
 	protected:
 		static std::map<ObjectCode, GameObject *> mObjTree;
+		static GameMap *mMap;
+
 		bool mIsRunning;
 	};
-
 }
 
 #endif // __GAME_H__

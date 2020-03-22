@@ -2,44 +2,54 @@
 
 #include "game.h"
 #include "shader.h"
+#include "texture.h"
+
 #include "tank.h"
 #include "shell.h"
-#include "texture.h"
 #include "anim-frame.h"
+#include "game-map.h"
 
 namespace hwj 
 {
 	std::map<ObjectCode, GameObject *> Game::mObjTree;
+	GameMap *Game::mMap = nullptr;
 
 	Game::Game() : mIsRunning(false)
 	{
 	}
-	
+
 	Game::~Game() 
 	{
 	}
 
+	void Game::SetGameMap(GameMap *gameMap)
+	{
+		mMap = gameMap;
+	}
+
+	void Game::SetCamera(glm::mat4 &camera)
+	{
+		mMap->SetCamera(camera);
+	}
+
 	void Game::StartGame()
 	{
+		GameMap *map = new GameMap(0.0f, 0.0f, 800.0f, 600.0f);
+		map->SetTag(AllocObjTag(MAP_TYPE));
+		map->Initialize();
+		SetGameMap(map);
+
 		Tank *tank = new Tank(PRIMARY_ROLE);
 		tank->SetTag(AllocObjTag(TANK_TYPE));
+		tank->SetMap(map);
 		tank->Initialize();
 
 		Tank *enemy = new Tank(ENEMY_ROLE, 200.0f, 400.0f);
 		enemy->SetTag(AllocObjTag(TANK_TYPE));
 		enemy->Initialize();
 
-		Animation *anim = new Animation(400.0f, 542.0f);
-		anim->SetAnimTexInfo(GenAnimTextures("res/explode.png"));
-		anim->SetTag(AllocObjTag(ANIM_TYPE));
-		anim->Initialize();
-		anim->SetLoopMode(true);
-		anim->Play();
-
 		AddObj(tank->GetTag().mCode,  tank);
 		AddObj(enemy->GetTag().mCode, enemy);
-		AddObj(anim->GetTag().mCode,  anim);
-
 		mIsRunning = true;
 	}
 
@@ -47,6 +57,10 @@ namespace hwj
 	{
 		mIsRunning = false;
 
+		// 销毁顶点数据
+		GameObject::RemoveAllVertexObj();
+
+		// 销毁对象
 		std::map<ObjectCode, GameObject *> &objTree = GetObjMap();
 		std::map<ObjectCode, GameObject *>::iterator it =
 			objTree.begin();
@@ -62,11 +76,31 @@ namespace hwj
 
 			it = objTree.begin();
 		}
+
+		if (mMap) {
+			mMap->Terminate();
+			delete mMap;
+			mMap = nullptr;
+		}
 	}
 
 	const bool & Game::IsRunning() const
 	{
 		return mIsRunning;
+	}
+
+	void Game::RollMap(GAMEEVNET gameEvent)
+	{
+		if (mMap) {
+			mMap->Update(gameEvent);
+		}
+	}
+
+	void Game::DrawMap(ShaderProgram &shader, float interpAlpha)
+	{
+		if (mMap) {
+			mMap->Draw(shader, interpAlpha);
+		}
 	}
 
 	void Game::UpdateAll(GAMEEVNET gameEvent) 

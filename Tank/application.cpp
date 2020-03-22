@@ -99,6 +99,7 @@ namespace hwj
 		// 设置投影矩阵，将 800*600 的窗口元素投影到 opengl -1，1 的范围
 		glm::mat4 projection = 
 			glm::ortho(0.0f, (float)winWidth, 0.0f, (float)winHeight, -1.0f, 1.0f);
+		mGame.SetCamera(projection);
 		shader.SetMat4f("projection", &projection[0][0]);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -143,6 +144,7 @@ namespace hwj
 			// 逻辑帧控制在 30 帧
 			while (logicCount >= logicDelt) {
 				Game::UpdateAll(&sdlEvent);
+				mGame.RollMap(&sdlEvent);
 				logicCount -= logicDelt;
 			}
 
@@ -151,6 +153,7 @@ namespace hwj
 				static_cast<float>(logicDelt);
 
 			// 渲染游戏对象
+			mGame.DrawMap(shader, interpAlpha);
 			Game::DrawAll(shader, interpAlpha);
 
 			// 双缓冲绘制

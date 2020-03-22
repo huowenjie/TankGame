@@ -31,7 +31,7 @@ namespace hwj
 		void Draw(ShaderProgram &shader, float interpAlgha = 1.0f);
 
 		// 更新当前位置
-		void Update(GAMEEVNET handle);
+		void Update(GAMEEVNET handle, RoleType role);
 
 		// 运行
 		void Run(Action action);
@@ -47,8 +47,13 @@ namespace hwj
 		// 终止
 		void Terminate();
 
+		// 更新模型矩阵
+		void UpdateModel();
+
 	protected:
-		unsigned int mShootInterval;	// 射击间隔 ms
+		uint32_t mShootInterval;		// 射击间隔 ms
+		uint32_t mShootIntervalTimer;	// 设计间隔计时器
+		bool isReadyFire;				// 是否准备开火
 
 		float mRotateSpeed;				// 当前炮塔转速
 		float mRotateAngle;				// 炮塔旋转角度

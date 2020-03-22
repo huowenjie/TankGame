@@ -13,6 +13,8 @@ namespace hwj
 	Turret::Turret(Tank *chassic) : 
 		GameObject("res/turret.png", 0, 0, 30.0f, 70.0f),
 		mShootInterval(500U),
+		isReadyFire(true),
+		mShootIntervalTimer(0U),
 		mRotateSpeed(1.0f),
 		mRotateAngle(0.0f),
 		mChassic(chassic)
@@ -35,21 +37,18 @@ namespace hwj
 	{
 		GameObject::Draw(shader, interpAlgha);
 
-		shader.SetInt("turret", 1);
 		shader.SetFloat("interpAlpha",	interpAlgha);
 		shader.SetMat4f("prevModel",	&mPrevModel[0][0]);
 		shader.SetMat4f("model",		&mModel[0][0]);
-		shader.SetMat4f("turModel",		&mTurModel[0][0]);
-		shader.SetMat4f("prevTur",		&mPrevTur[0][0]);
 
-		glBindTexture(GL_TEXTURE_2D, mTex);
-		glBindVertexArray(mVao);
+		glBindTexture(GL_TEXTURE_2D, mVertObj.mTex);
+		glBindVertexArray(mVertObj.mVao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 	}
 
 	// 更新当前位置
-	void Turret::Update(GAMEEVNET handle)
+	void Turret::Update(GAMEEVNET handle, RoleType role)
 	{
 		SDL_Event *gameEvent = reinterpret_cast<SDL_Event *>(handle);
 
@@ -58,13 +57,20 @@ namespace hwj
 		}
 
 		const Uint8 *state = SDL_GetKeyboardState(NULL);
-		mPrevTur = mTurModel;
-		
+
+		mPrevModel = mModel;
+
 		// ------------- 基本操作逻辑 ---------------
 
-		if (state[SDL_SCANCODE_Q])		{ Run(LEFTROTATE);  }
-		if (state[SDL_SCANCODE_E])		{ Run(RIGHTROTATE); }
-		if (state[SDL_SCANCODE_SPACE])	{ Fire();			}
+		if (role == PRIMARY_ROLE) {
+			if (state[SDL_SCANCODE_Q])		{ Run(LEFTROTATE);	}
+			if (state[SDL_SCANCODE_E])		{ Run(RIGHTROTATE); }
+			if (state[SDL_SCANCODE_SPACE])	{ Fire();			}
+		} else {
+			// 通过 AI 命令操作
+		}
+
+		UpdateModel();
 	}
 
 	// 旋转
@@ -91,37 +97,29 @@ namespace hwj
 
 	void Turret::Fire()
 	{
-		static bool isReady = true;
-		static Uint32 prevTime = 0;
 		Uint32 curTime = SDL_GetTicks();
 
-		if (isReady) {
-			isReady = false;
+		if (isReadyFire) {
+			isReadyFire = false;
 			LOG_INFO("Fire!\n");
 
 			Shell *shell = new Shell(mStartPos.x, mStartPos.y);
 
 			shell->SetTag(AllocObjTag(SHELL_TYPE));
-			shell->mModel = mModel;
-			shell->mShellModel = glm::translate(mTurModel,
-				glm::vec3(0.0f, 50.0f, 0.0f));
+			shell->mRun = mRun;
+			shell->mShellModel = mTurModel;
 
-			shell->mShootPos = 
-				mModel * shell->mShellModel * mStartPos;
-
-			shell->mPrevModel = mPrevModel;
-			shell->mPrevShell = shell->mShellModel;
 			shell->mCurStatus = Shell::FLYING;
 			shell->Initialize();
 
 			Game::AddObj(shell->GetTag().mCode, shell);
-			prevTime = SDL_GetTicks() + mShootInterval;
+			mShootIntervalTimer = SDL_GetTicks() + mShootInterval;
 		} else {
 			LOG_INFO("Filling!\n");
 		}
 
-		if (!SDL_TICKS_PASSED(prevTime, curTime)) {
-			isReady = true;
+		if (!SDL_TICKS_PASSED(mShootIntervalTimer, curTime)) {
+			isReadyFire = true;
 		}
 	}
 
@@ -129,20 +127,35 @@ namespace hwj
 	void Turret::Initialize() 
 	{
 		float vertex[24] = {
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 0.0f, 1.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 1.0f, 1.0f,
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2 + 12.0f, 1.0f, 0.0f,
+			-0.5f,  0.5f, 0.0f, 1.0f,
+			 0.5f,  0.5f, 1.0f, 1.0f,
+			 0.5f, -0.5f, 1.0f, 0.0f,
 
-			mStartPos.x + mWidth / 2, mStartPos.y - mHeight / 2 + 12.0f, 1.0f, 0.0f,
-			mStartPos.x - mWidth / 2, mStartPos.y - mHeight / 2 + 12.0f, 0.0f, 0.0f,
-			mStartPos.x - mWidth / 2, mStartPos.y + mHeight / 2 + 12.0f, 0.0f, 1.0f
+			 0.5f, -0.5f, 1.0f, 0.0f,
+			-0.5f, -0.5f, 0.0f, 0.0f,
+			-0.5f,  0.5f, 0.0f, 1.0f
 		};
 
-		GameObject::Initialize(vertex, sizeof(vertex) / sizeof(float));
+		GameObject::LoadVertex(vertex, sizeof(vertex) / sizeof(float));
+		GameObject::Initialize();
+
+		// 初始化物体位置
+		mTranslate = glm::translate(mTranslate, glm::vec3(0, mSize.mY / 6, 0.0f));
+		mModel = mTranslate * mRotate * mScale;
+		mPrevModel = mModel;
+
+		if (!GameObject::IsVertexObjExist(TURRET_TYPE)) {
+			GameObject::AddVertexObj(TURRET_TYPE, mVertObj);
+		}
 	}
 
 	void Turret::Terminate()
 	{
 		GameObject::Terminate();
+	}
+
+	void Turret::UpdateModel()
+	{
+		mModel = mRun * mTurModel * mTranslate * mRotate * mScale;
 	}
 }

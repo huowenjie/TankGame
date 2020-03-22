@@ -44,7 +44,7 @@ namespace hwj
 
 	protected:
 		glm::mat4 mShellModel;	// 炮弹位置模型矩阵
-		glm::mat4 mPrevShell;	// 上一帧炮弹模型矩阵
+		glm::mat4 mShellBasic;	// 上一帧炮弹模型矩阵
 		glm::vec4 mShootPos;	// 发射位置
 
 		float  mRange;			// 射程

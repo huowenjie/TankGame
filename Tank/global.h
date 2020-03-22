@@ -17,7 +17,7 @@ namespace hwj
 	typedef void * GAMEEVNET;
 
 	// ---------------------------------------------------------------------------
-	
+
 	// 角色类型
 	typedef int RoleType;
 
@@ -31,6 +31,7 @@ namespace hwj
 	// 对象类型, 对于 GameObject 定义
 	typedef int ObjectType;
 
+	extern const ObjectType MAP_TYPE;		// 地图
 	extern const ObjectType TANK_TYPE;		// 坦克
 	extern const ObjectType SHELL_TYPE;		// 炮弹
 	extern const ObjectType TURRET_TYPE;	// 炮塔

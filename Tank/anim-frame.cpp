@@ -49,9 +49,9 @@ namespace hwj
 		shader.SetMat4f("prevModel", &mPrevModel[0][0]);
 		shader.SetMat4f("model", &mModel[0][0]);
 
-		glBindTexture(GL_TEXTURE_2D, mTex);
-		glBindVertexArray(mVao);
-		glDrawArrays(GL_TRIANGLES, mFrameIndex * 12, 6);
+		glBindTexture(GL_TEXTURE_2D, mVertObj.mTex);
+		glBindVertexArray(mVertObj.mVao);
+		glDrawArrays(GL_TRIANGLES, mFrameIndex * 6, 6);
 		glBindVertexArray(0);
 	}
 
@@ -101,59 +101,54 @@ namespace hwj
 		float tmpIndex = 0.0f;
 
 		for (int i = 0, j = 24 * mFrameCount; i < j; i += 24) {
-			textureVertex[i] = mStartPos.x - mWidth / 2,
-			textureVertex[i + 1] = mStartPos.y + mHeight / 2,
-			textureVertex[i + 2] = mStartPos.x + mWidth  / 2,
-			textureVertex[i + 3] = mStartPos.y + mHeight / 2,
-			textureVertex[i + 4] = mStartPos.x + mWidth  / 2,
-			textureVertex[i + 5] = mStartPos.y - mHeight / 2,
+			textureVertex[i] = -0.5f;
+			textureVertex[i + 1] = 0.5f;
 
-			textureVertex[i + 6] = mStartPos.x + mWidth  / 2,
-			textureVertex[i + 7] = mStartPos.y - mHeight / 2,
-			textureVertex[i + 8] = mStartPos.x - mWidth  / 2,
-			textureVertex[i + 9] = mStartPos.y - mHeight / 2,
-			textureVertex[i + 10] = mStartPos.x - mWidth / 2,
-			textureVertex[i + 11] = mStartPos.y + mHeight / 2,
+			textureVertex[i + 2] = tmpIndex / mFrameCount;
+			textureVertex[i + 3] = 1.0f;
 
-			textureVertex[i + 12] = tmpIndex / mFrameCount;
-			textureVertex[i + 13] = 1.0f;
+			textureVertex[i + 4] = 0.5f;
+			textureVertex[i + 5] = 0.5f;
+
+			textureVertex[i + 6] = (tmpIndex + 1.0f) / mFrameCount;
+			textureVertex[i + 7] = 1.0f;
+
+			textureVertex[i + 8] = 0.5f;
+			textureVertex[i + 9] = -0.5f;
+
+			textureVertex[i + 10] = (tmpIndex + 1.0f) / mFrameCount;
+			textureVertex[i + 11] = 0.0f;
+
+			textureVertex[i + 12] = 0.5f;
+			textureVertex[i + 13] = -0.5f;
+
 			textureVertex[i + 14] = (tmpIndex + 1.0f) / mFrameCount;
-			textureVertex[i + 15] = 1.0f;
-			textureVertex[i + 16] = (tmpIndex + 1.0f) / mFrameCount;
-			textureVertex[i + 17] = 0.0f;
+			textureVertex[i + 15] = 0.0f;
 
-			textureVertex[i + 18] = (tmpIndex + 1.0f) / mFrameCount;
+			textureVertex[i + 16] = -0.5f;
+			textureVertex[i + 17] = -0.5f;
+
+			textureVertex[i + 18] = tmpIndex / mFrameCount;
 			textureVertex[i + 19] = 0.0f;
-			textureVertex[i + 20] = tmpIndex / mFrameCount;
-			textureVertex[i + 21] = 0.0f;
+
+			textureVertex[i + 20] = -0.5f;
+			textureVertex[i + 21] = 0.5f;
+
 			textureVertex[i + 22] = tmpIndex / mFrameCount;
 			textureVertex[i + 23] = 1.0f;
 
 			tmpIndex += 1.0f;
 		}
 
+		mVertObj.mTex = mTexInfo.mTex;
+
 		// 创建顶点缓冲对象
-		glCreateVertexArrays(1, &mVao);
-		glBindVertexArray(mVao);
+		GameObject::LoadVertex(textureVertex, 24 * mFrameCount);
+		GameObject::Initialize();
 
-		glCreateBuffers(1, &mVbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-		glNamedBufferStorage(mVbo, 24 * mFrameCount * sizeof(float), textureVertex, GL_DYNAMIC_STORAGE_BIT);
-
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const void *)0);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const void *)(12 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		// 加载纹理文件
-		if (!glIsTexture(mTex) && !mResPath.empty()) {
-			mTex = GenDefTextures(mResPath.c_str());
+		if (!GameObject::IsVertexObjExist(ANIM_TYPE)) {
+			GameObject::AddVertexObj(ANIM_TYPE, mVertObj);
 		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
-		mTex = mTexInfo.mTex;
 
 		delete[] textureVertex;
 		mAnimStatus |= ANIM_INITED;

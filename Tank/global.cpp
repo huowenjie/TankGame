@@ -7,6 +7,7 @@ namespace hwj
 	const RoleType ENEMY_ROLE = 2;
 	const RoleType NPC_ROLE = 3;
 
+	const ObjectType MAP_TYPE = 0;
 	const ObjectType TANK_TYPE = 1;
 	const ObjectType SHELL_TYPE = 2;
 	const ObjectType TURRET_TYPE = 3;
